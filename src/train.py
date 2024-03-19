@@ -1,8 +1,11 @@
-# set the matplotlib backend so figures can be saved in the background
+# Some of the code taken from
+# https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
+
+# Set the matplotlib backend so figures can be saved in the background
 import matplotlib
 matplotlib.use("Agg")
 
-# import the necessary packages
+# Import the necessary packages
 from models.LeNet import LeNet
 from sklearn.metrics import classification_report
 from torch.utils.data import random_split
@@ -23,19 +26,18 @@ INIT_LR = 1e-3
 BATCH_SIZE = 64
 EPOCHS = 1
 
-# Define the train and val splits
+# Define the training and validation split
 TRAIN_SPLIT = 0.75
 VAL_SPLIT = 1 - TRAIN_SPLIT
 
-# Configure the device we will be using to train the model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("[INIT] Loading dataset...")
 
-print("[INFO] loading dataset...")
 trainData = MNIST(root="../data", train=True, download=True, transform=ToTensor())
 testData = MNIST(root="../data", train=False, download=True, transform=ToTensor())
 
+print("[INIT] Preparing the datasets...")
+
 # Calculate the train/validation split
-print("[INFO] generating the train/validation split...")
 numTrainSamples = int(len(trainData) * TRAIN_SPLIT)
 numValSamples = int(len(trainData) * VAL_SPLIT)
 (trainData, valData) = random_split(trainData, [numTrainSamples, numValSamples], generator=torch.Generator().manual_seed(42))
@@ -49,20 +51,22 @@ testDataLoader = DataLoader(testData, batch_size=BATCH_SIZE)
 trainSteps = len(trainDataLoader.dataset) // BATCH_SIZE
 valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 
-# Initialize the model
-print("[INFO] initializing the LeNet model...")
-model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+print("[INIT] Initializing the model...")
 
-# Initialize our optimizer and loss function
+# Configure the device we will be using to train the model
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Initialize the model
+model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+# Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.NLLLoss()
 
 # Initialize a dictionary to store training history
 H = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 
-# Measure how long training is going to take
-print("[INFO] training the network...")
-startTime = time.time()
+print("[TRAIN] Training the model...")
+
+startTime = time.time() # To measure how long training is going to take
 
 # loop over our epochs
 for e in range(0, EPOCHS):
@@ -115,16 +119,21 @@ for e in range(0, EPOCHS):
 	H["val_acc"].append(valCorrect)
 	
 	# Print the model training and validation information
-	print("[INFO] EPOCH: {}/{}".format(e + 1, EPOCHS))
-	print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(avgTrainLoss, trainCorrect))
-	print("Validation loss: {:.6f}, Validation accuracy: {:.4f}\n".format(avgValLoss, valCorrect))
+	print(
+            "[TRAIN] EPOCH: {}/{} | Train loss: {:0.6f} | Train acc: {:0.4f} | Val loss: {:0.6f} | Val acc: {:0.4f}"
+            "".format(e + 1, EPOCHS, avgTrainLoss, trainCorrect, avgValLoss, valCorrect)
+        )
+	#print("[INFO] EPOCH: {}/{}".format(e + 1, EPOCHS))
+	#print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(avgTrainLoss, trainCorrect))
+	#print("Validation loss: {:.6f}, Validation accuracy: {:.4f}\n".format(avgValLoss, valCorrect))
 	
 # finish measuring how long training took
 endTime = time.time()
-print("[INFO] total time taken to train the model: {:.2f}s".format(endTime - startTime))
+print("[TRAIN] Finished training the mdoel...")
+print("[TRAIN] Total time taken to train the model: {:.2f}s".format(endTime - startTime))
 
 # We can now evaluate the network on the test set
-print("[INFO] evaluating network...")
+print("[END] Evaluating the model...")
 
 with torch.no_grad(): # Turn off autograd for testing evaluation
 	model.eval() # Set the model in evaluation mode
@@ -137,6 +146,7 @@ with torch.no_grad(): # Turn off autograd for testing evaluation
 		pred = model(x)
 		preds.extend(pred.argmax(axis=1).cpu().numpy())
 		
+print("[END] Generating the results...")
 # Generate a classification report
 print(classification_report(testData.targets.cpu().numpy(), np.array(preds), target_names=testData.classes))
 
@@ -152,12 +162,13 @@ plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
 
-
-# Saving the results
+print("[END] Saving the resutls & the model...")
+# Create a directory to store the results
 dt = datetime.now().strftime("%d-%m-%Y@%H-%M-%S")
 dirname = os.path.dirname(__file__)
 path = "results/{date}".format(date=dt)
-
 os.mkdir(path)
+
+# Saving the results
 plt.savefig(path + "/plot.png")
 torch.save(model, path + "/model.pth") # Serialize the model to disk
