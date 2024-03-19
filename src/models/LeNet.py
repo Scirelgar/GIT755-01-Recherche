@@ -13,7 +13,7 @@ class LeNet(Module):
 		super(LeNet, self).__init__()
 
 		# Initialize first set of CONV => RELU => POOL layers
-		self.conv1 = Conv2d(in_channels=1, out_channels=16, kernel_size=(5, 5), padding=2)
+		self.conv1 = Conv2d(in_channels=numChannels, out_channels=16, kernel_size=(5, 5), padding=2)
 		self.relu1 = ReLU()
 		self.maxpool1 = MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
