@@ -6,7 +6,6 @@ import matplotlib
 matplotlib.use("Agg")
 
 # Import the necessary packages
-from models.LeNet import LeNet
 from sklearn.metrics import classification_report
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader
@@ -21,14 +20,13 @@ import time
 from datetime import datetime
 import os
 
+from models.LeNet import LeNet
+from models.HQNN import HQNN
+
 # Define training hyperparameters
 INIT_LR = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 1
-
-# Define the training and validation split
-TRAIN_SPLIT = 0.75
-VAL_SPLIT = 1 - TRAIN_SPLIT
+EPOCHS = 5
 
 print("[INIT] Loading dataset...")
 
@@ -37,10 +35,20 @@ testData = MNIST(root="../data", train=False, download=True, transform=ToTensor(
 
 print("[INIT] Preparing the datasets...")
 
+# Define the training and validation split
+TRAIN_SPLIT = 0.009
+VAL_SPLIT = 0.001
+BUFFER_SIZE = 1 - TRAIN_SPLIT - VAL_SPLIT
+
 # Calculate the train/validation split
 numTrainSamples = int(len(trainData) * TRAIN_SPLIT)
 numValSamples = int(len(trainData) * VAL_SPLIT)
-(trainData, valData) = random_split(trainData, [numTrainSamples, numValSamples], generator=torch.Generator().manual_seed(42))
+numBufferSamples = int(len(trainData) * BUFFER_SIZE)
+(trainData, valData, bufferData) = random_split(
+    trainData,
+    [numTrainSamples, numValSamples, numBufferSamples],
+    generator=torch.Generator().manual_seed(42),
+)
 
 # Initialize the train, validation, and test data loaders
 trainDataLoader = DataLoader(trainData, shuffle=True, batch_size=BATCH_SIZE)
@@ -56,7 +64,8 @@ print("[INIT] Initializing the model...")
 # Configure the device we will be using to train the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Initialize the model
-model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+#model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+model = HQNN(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.NLLLoss()
@@ -129,7 +138,7 @@ for e in range(0, EPOCHS):
 	
 # finish measuring how long training took
 endTime = time.time()
-print("[TRAIN] Finished training the mdoel...")
+print("[TRAIN] Finished training the model...")
 print("[TRAIN] Total time taken to train the model: {:.2f}s".format(endTime - startTime))
 
 # We can now evaluate the network on the test set
