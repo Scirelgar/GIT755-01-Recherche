@@ -1,76 +1,59 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import pennylane as qml
+# import the necessary packages
+from torch.nn import Module
+from torch.nn import Conv2d
+from torch.nn import Linear
+from torch.nn import MaxPool2d
+from torch.nn import ReLU
+from torch.nn import LogSoftmax
+from torch import flatten
+from layers.QLinear import QuantumLayer
 
-qml.enable_tape()
+class HQNN(Module):
+	def __init__(self, numChannels, classes):
+		# Call the parent constructor
+		super(HQNN, self).__init__()
 
-class QuantumLayer(Function):
-    @staticmethod
-    def forward(ctx, input, theta):
-        dev = qml.device("default.qubit", wires=len(input[0]))
+		# Initialize first set of CONV => RELU => POOL layers
+		self.conv1 = Conv2d(in_channels=numChannels, out_channels=16, kernel_size=(5, 5), padding=2)
+		self.relu1 = ReLU()
+		self.maxpool1 = MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
-        @qml.qnode(dev)
-        def circuit(inputs, theta):
-            for i in range(len(inputs)):
-                qml.RX(theta[i], wires=i)
-            return [qml.expval(qml.PauliZ(i)) for i in range(len(inputs))]
+		# Initialize second set of CONV => RELU => POOL layers
+		self.conv2 = Conv2d(in_channels=16, out_channels=32, kernel_size=(5, 5), padding=2)
+		self.relu2 = ReLU()
+		self.maxpool2 = MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
+		
+		# Initialize first (and only) set of FC => RELU layers
+		self.fc1 = Linear(in_features=1568, out_features=500)
+		self.relu3 = ReLU()
+		
+		# Initialize the quantum layer
+		self.qlayer1 = QuantumLayer(size_in=500, n_qubits=5, n_layers=1)
 
-        expectation = circuit(input, theta)
-        ctx.save_for_backward(input, theta)
-        return torch.tensor(expectation, requires_grad=True)
+		# Initialize our softmax classifier
+		self.fc2 = Linear(in_features=500, out_features=classes)
+		self.logSoftmax = LogSoftmax(dim=1)
 
-    @staticmethod
-    def backward(ctx, grad_output):
-        input, theta = ctx.saved_tensors
-        input_list = input.tolist()
-        gradient = []
-        for i in range(len(theta)):
-            input_list_copy1 = input_list.copy()
-            input_list_copy2 = input_list.copy()
-            input_list_copy1[i] += 0.01
-            input_list_copy2[i] -= 0.01
-            input_plus = torch.tensor(input_list_copy1, requires_grad=False)
-            input_minus = torch.tensor(input_list_copy2, requires_grad=False)
-            expectation_plus = QuantumLayer.forward(None, input_plus, theta)
-            expectation_minus = QuantumLayer.forward(None, input_minus, theta)
-            gradient.append((expectation_plus - expectation_minus) / 0.02)
-        grad_input = torch.tensor(gradient, requires_grad=True)
-        grad_theta = grad_output.clone().detach()
-        return grad_input, grad_theta
+	def forward(self, x):
+		# ==== Convolutional layer
+		x = self.conv1(x)
+		x = self.relu1(x)
+		x = self.maxpool1(x)
+		x = self.conv2(x)
+		x = self.relu2(x)
+		x = self.maxpool2(x)
 
-class QuantumLayerModule(nn.Module):
-    def __init__(self, num_qubits):
-        super(QuantumLayerModule, self).__init__()
-        self.num_qubits = num_qubits
-        self.theta = nn.Parameter(torch.randn(self.num_qubits))
+		x = flatten(x, 1) # flatten the output from the previous layer and pass it
 
-    def forward(self, x):
-        return QuantumLayer.apply(x, self.theta)
+		# ==== FC layer
+		x = self.fc1(x)
+		x = self.relu3(x)
+		
+		# ==== Quantum layer
+		x = self.qlayer1(x)
 
-class HybridQuantumModel(nn.Module):
-    def __init__(self, num_qubits, num_classes):
-        super(HybridQuantumModel, self).__init__()
-        self.conv_layer = nn.Conv2d(1, 32, kernel_size=3, padding=1)
-        self.quantum_layer = QuantumLayerModule(num_qubits)
-        self.fc_layer = nn.Linear(num_qubits, 64)
-        self.softmax = nn.Softmax(dim=1)
+		# ==== Softmax classifier
+		x = self.fc2(x)
+		output = self.logSoftmax(x)
 
-    def forward(self, x):
-        x = self.conv_layer(x)
-        x = torch.relu(x)
-        x = x.view(x.size(0), -1)  # Flatten
-        x = self.quantum_layer(x)
-        x = self.fc_layer(x)
-        x = self.softmax(x)
-        return x
-
-# Create an instance of the model
-model = HybridQuantumModel(num_qubits=4, num_classes=10)
-
-# Define loss function and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# Display model summary
-print(model)
+		return output # return the output predictions
