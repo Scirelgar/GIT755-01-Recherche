@@ -31,12 +31,8 @@ class ConvolutionLayer(Module):
         self.maxpool2 = MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
         # initialize first (and only) set of FC => RELU layers
-        self.fc1 = Linear(in_features=1568, out_features=500)
+        self.fc1 = Linear(in_features=1568, out_features=1568) #output features to be determined by the QuantumLayer
         self.relu3 = ReLU()
-
-        # initialize our softmax classifier
-        self.fc2 = Linear(in_features=500, out_features=classes)
-        self.logSoftmax = LogSoftmax(dim=1)
 
     def forward(self, x):
         # pass the input through our first set of CONV => RELU => POOL layers
@@ -51,14 +47,10 @@ class ConvolutionLayer(Module):
         x = self.relu2(x)
         x = self.maxpool2(x)
 
-        # flatten the volume, then FC => RELU => FC
+        # flatten the volume, then FC
         x = flatten(x, 1)
         x = self.fc1(x)
         x = self.relu3(x)
-        x = self.fc2(x)
-
-        # apply a softmax to the output
-        x = self.logSoftmax(x)
 
         # return the output
         return x
