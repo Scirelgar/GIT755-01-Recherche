@@ -21,7 +21,7 @@ from datetime import datetime
 import os
 
 from models.LeNet import LeNet
-from models.HQNN import HQNN
+from models.HQNN_Quanv import HQNN
 
 # Define training hyperparameters
 INIT_LR = 1e-3
