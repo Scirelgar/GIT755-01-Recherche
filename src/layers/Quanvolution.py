@@ -15,29 +15,29 @@ class Quanvolution(nn.Module):
         self.padding = padding
         self.n_layers = n_layers
 
-        n_wires = kernel_size[0]*kernel_size[1]
-        dev = qml.device("default.qubit", wires=n_wires)
+        self.num_qubits = kernel_size[0]*kernel_size[1]
+        self.dev = qml.device("default.qubit", wires=self.num_qubits)
         # Random circuit parameters
-        rand_params = np.random.uniform(high=2 * np.pi, size=(n_layers, n_wires))
-        
-        # TODO Better way to implement the circuit than declare it in the initialisation??
-        @qml.qnode(dev)
-        def circuit(phi):
-            # Encoding of 4 classical input values
-            for j in range(4):
-                qml.RY(np.pi * phi[j], wires=j)
+        self.circuit = self.qnode()
 
-            # Random quantum circuit
-            RandomLayers(rand_params, wires=list(range(4)))
-
-            # Measurement producing 4 classical output values
-            return [qml.expval(qml.PauliZ(j)) for j in range(4)]
         
-        self.circuit = circuit
+    def qnode(self): 
+        rand_params = np.random.uniform(high=2 * np.pi, size=(self.n_layers, self.num_qubits))
+
+        @qml.qnode(self.device)
+        def circuit(self, phi):
+            for j in range(self.num_qubits):
+                qml.RY(np.pi *phi[j], wires=j)
+
+            RandomLayers(rand_params, wires=list(range(self.num_qubits)))
+
+            return [qml.expval(qml.PauliZ(j)) for j in range(self.num_qubits)]
+        
+        return circuit
 
     def forward(self, x):
         # TODO Calculate the actual output size
-        out = np.zeros((14, 14, 4))
+        out = np.zeros((x.shape[0]/self.kernel_size[0],x.shape[1]/self.kernel_size[1] , self.num_qubits))
 
         # TODO Not sure 100% about the x.shape[0] and x.shape[1] values
         for j in range(0, x.shape[0], self.kernel_size[0]):

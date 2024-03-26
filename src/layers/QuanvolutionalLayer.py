@@ -20,7 +20,7 @@ class QuanvolutionalLayer():
 
         pass
 
-    def qnode(self, phi ):    
+    def qnode(self, phi ): 
         @qml.qnode(self.device)
         def circuit(self, phi):
             for j in range(self.num_qubits):
