@@ -1,4 +1,3 @@
-# import the necessary packages
 from torch.nn import Module
 from torch.nn import Conv2d
 from torch.nn import Linear
