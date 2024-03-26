@@ -1,4 +1,6 @@
-# import the necessary packages
+# Some of the code taken from
+# https://pyimagesearch.com/2021/07/19/pytorch-training-your-first-convolutional-neural-network-cnn/
+
 from torch.nn import Module
 from torch.nn import Conv2d
 from torch.nn import Linear
