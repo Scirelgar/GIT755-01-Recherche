@@ -19,14 +19,15 @@ import torch
 import time
 from datetime import datetime
 import os
+import pickle 
 
 from models.LeNet import LeNet
-from models.HQNN_Quanv import HQNN
+from models.HQNN_Quanv import HQNN_Quanv
 
 # Define training hyperparameters
 INIT_LR = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 5
+EPOCHS = 1
 
 print("[INIT] Loading dataset...")
 
@@ -36,8 +37,8 @@ testData = MNIST(root="../data", train=False, download=True, transform=ToTensor(
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.009
-VAL_SPLIT = 0.001
+TRAIN_SPLIT = 0.8
+VAL_SPLIT = 0.1
 BUFFER_SIZE = 1 - TRAIN_SPLIT - VAL_SPLIT
 
 # Calculate the train/validation split
@@ -64,11 +65,11 @@ print("[INIT] Initializing the model...")
 # Configure the device we will be using to train the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Initialize the model
-#model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
-model = HQNN(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+#model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
-lossFn = nn.NLLLoss()
+lossFn = nn.CrossEntropyLoss()
 
 # Initialize a dictionary to store training history
 H = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
@@ -132,18 +133,15 @@ for e in range(0, EPOCHS):
             "[TRAIN] EPOCH: {}/{} | Train loss: {:0.6f} | Train acc: {:0.4f} | Val loss: {:0.6f} | Val acc: {:0.4f}"
             "".format(e + 1, EPOCHS, avgTrainLoss, trainCorrect, avgValLoss, valCorrect)
         )
-	#print("[INFO] EPOCH: {}/{}".format(e + 1, EPOCHS))
-	#print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(avgTrainLoss, trainCorrect))
-	#print("Validation loss: {:.6f}, Validation accuracy: {:.4f}\n".format(avgValLoss, valCorrect))
 	
-# finish measuring how long training took
+# Finish measuring how long training took
 endTime = time.time()
 print("[TRAIN] Finished training the model...")
 print("[TRAIN] Total time taken to train the model: {:.2f}s".format(endTime - startTime))
 
-# We can now evaluate the network on the test set
 print("[END] Evaluating the model...")
 
+# We can now evaluate the network on the test set
 with torch.no_grad(): # Turn off autograd for testing evaluation
 	model.eval() # Set the model in evaluation mode
 	preds = [] # Initialize a list to store our predictions
@@ -156,28 +154,37 @@ with torch.no_grad(): # Turn off autograd for testing evaluation
 		preds.extend(pred.argmax(axis=1).cpu().numpy())
 		
 print("[END] Generating the results...")
+
 # Generate a classification report
 print(classification_report(testData.targets.cpu().numpy(), np.array(preds), target_names=testData.classes))
 
 # Plot the training loss and accuracy
+fig, (ax1, ax2) = plt.subplots(2)
 plt.style.use("ggplot")
-plt.figure()
-plt.plot(H["train_loss"], label="train_loss")
-plt.plot(H["val_loss"], label="val_loss")
-plt.plot(H["train_acc"], label="train_acc")
-plt.plot(H["val_acc"], label="val_acc")
-plt.title("Training Loss and Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
-plt.legend(loc="lower left")
+ax1.set_title("Accuracy")
+ax1.plot(H["train_acc"], label="Training")
+ax1.plot(H["val_acc"], label="Validation")
+ax1.legend(loc="lower right")
+ax2.set_title("Loss")
+ax2.plot(H["train_loss"], label="Training")
+ax2.plot(H["val_loss"], label="Validation")
+ax1.legend(loc="upper right")
 
-print("[END] Saving the resutls & the model...")
+print("[END] Saving & logging...")
+
 # Create a directory to store the results
-dt = datetime.now().strftime("%d-%m-%Y@%H-%M-%S")
+dt = datetime.now().strftime("%Y-%m-%d@%H-%M-%S")
 dirname = os.path.dirname(__file__)
 path = "results/{date}".format(date=dt)
 os.mkdir(path)
 
 # Saving the results
 plt.savefig(path + "/plot.png")
-torch.save(model, path + "/model.pth") # Serialize the model to disk
+
+with open(path + "/data.pkl", 'wb') as f:
+    pickle.dump(H, f)
+
+# TODO NOT WORKING AT THE MOMENT
+# torch.save(model, path + "/model.pth") # Serialize the model to disk
