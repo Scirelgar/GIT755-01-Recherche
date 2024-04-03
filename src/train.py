@@ -32,22 +32,22 @@ EPOCHS = 1
 print("[INIT] Loading dataset...")
 
 trainData = MNIST(root="../data", train=True, download=True, transform=ToTensor())
-testData = MNIST(root="../data", train=False, download=True, transform=ToTensor())
 
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.8
-VAL_SPLIT = 0.1
-BUFFER_SIZE = 1 - TRAIN_SPLIT - VAL_SPLIT
+TRAIN_SPLIT = 0.0005
+VAL_SPLIT = 0.0002
+TEST_SPLIT = 0.0004
 
 # Calculate the train/validation split
 numTrainSamples = int(len(trainData) * TRAIN_SPLIT)
 numValSamples = int(len(trainData) * VAL_SPLIT)
-numBufferSamples = int(len(trainData) * BUFFER_SIZE)
-(trainData, valData, bufferData) = random_split(
+numTestSamples = int(len(trainData) * TEST_SPLIT)
+unusedSamples = len(trainData) - (numTrainSamples + numValSamples + numTestSamples)
+(trainData, valData, testData, _) = random_split(
     trainData,
-    [numTrainSamples, numValSamples, numBufferSamples],
+    [numTrainSamples, numValSamples, numTestSamples, unusedSamples],
     generator=torch.Generator().manual_seed(42),
 )
 
@@ -65,8 +65,8 @@ print("[INIT] Initializing the model...")
 # Configure the device we will be using to train the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Initialize the model
-model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
-#model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
+#model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
+model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.CrossEntropyLoss()
