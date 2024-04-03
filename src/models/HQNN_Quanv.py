@@ -2,8 +2,8 @@ from torch.nn import Module
 from torch.nn import Linear
 from torch.nn import ReLU
 from torch.nn import LogSoftmax
-from torch import flatten
-from src.layers.QuanvolutionLayer import QuanvolutionLayer
+from torch import flatten, float32
+from layers.QuanvolutionLayer import QuanvolutionLayer
 
 class HQNN_Quanv(Module):
 	def __init__(self, in_channels, classes):
@@ -25,7 +25,7 @@ class HQNN_Quanv(Module):
 		# ==== Convolutional layer
 		x = self.quanv(x)
 
-		x = flatten(x, 1) # flatten the output from the previous layer and pass it
+		x = flatten(x.to(float32), 1) # flatten the output from the previous layer and pass it
 
 		# ==== FC layer
 		x = self.fc1(x)

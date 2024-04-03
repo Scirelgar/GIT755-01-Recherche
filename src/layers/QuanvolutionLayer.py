@@ -22,8 +22,9 @@ class QuanvolutionLayer(nn.Module):
 
         @qml.qnode(dev)
         def circuit(inputs, weights):
-            for j in range(n_qubits):
-                qml.RY(np.pi *inputs[j], wires=j)
+            qml.templates.AngleEmbedding(inputs, wires=range(n_qubits))
+            #for j in range(n_qubits):
+            #    qml.RY(np.pi *inputs[j], wires=j)
 
             qml.RX(weights[0, 0], wires=0)
             qml.RX(weights[0, 1], wires=1)
@@ -33,7 +34,7 @@ class QuanvolutionLayer(nn.Module):
             qml.RY(weights[0, 2], wires=0)
             qml.RY(weights[0, 3], wires=3)
 
-            return [qml.expval(qml.PauliZ(j)) for j in range(self.n_qubits())]
+            return [qml.expval(qml.PauliZ(j)) for j in range(n_qubits)]
         return qml.qnn.TorchLayer(circuit, weight_shapes)
     
     def forward(self, x):
