@@ -27,26 +27,26 @@ from models.HQNN_Quanv import HQNN_Quanv
 # Define training hyperparameters
 INIT_LR = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 1
+EPOCHS = 10
 
 print("[INIT] Loading dataset...")
 
-trainData = MNIST(root="../data", train=True, download=True, transform=ToTensor())
+dataset = MNIST(root="../data", train=True, download=True, transform=ToTensor())
 
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.0005
-VAL_SPLIT = 0.0002
-TEST_SPLIT = 0.0004
+TRAIN_SPLIT = 0.0025
+VAL_SPLIT = 0.0015
+TEST_SPLIT = 0.0015
 
 # Calculate the train/validation split
-numTrainSamples = int(len(trainData) * TRAIN_SPLIT)
-numValSamples = int(len(trainData) * VAL_SPLIT)
-numTestSamples = int(len(trainData) * TEST_SPLIT)
-unusedSamples = len(trainData) - (numTrainSamples + numValSamples + numTestSamples)
+numTrainSamples = int(len(dataset) * TRAIN_SPLIT)
+numValSamples = int(len(dataset) * VAL_SPLIT)
+numTestSamples = int(len(dataset) * TEST_SPLIT)
+unusedSamples = len(dataset) - (numTrainSamples + numValSamples + numTestSamples)
 (trainData, valData, testData, _) = random_split(
-    trainData,
+    dataset,
     [numTrainSamples, numValSamples, numTestSamples, unusedSamples],
     generator=torch.Generator().manual_seed(42),
 )
@@ -141,22 +141,24 @@ print("[TRAIN] Total time taken to train the model: {:.2f}s".format(endTime - st
 
 print("[END] Evaluating the model...")
 
+ys = []
 # We can now evaluate the network on the test set
 with torch.no_grad(): # Turn off autograd for testing evaluation
 	model.eval() # Set the model in evaluation mode
 	preds = [] # Initialize a list to store our predictions
 	# Evaluation with test dataset
 	for (x, y) in testDataLoader:
+		ys = y
 		# Send the input to the device
 		x = x.to(device)
 		# Make the predictions and add them to the list
 		pred = model(x)
 		preds.extend(pred.argmax(axis=1).cpu().numpy())
-		
+
 print("[END] Generating the results...")
 
 # Generate a classification report
-print(classification_report(testData.targets.cpu().numpy(), np.array(preds), target_names=testData.classes))
+print(classification_report(ys, np.array(preds), target_names=testData.dataset.classes))
 
 # Plot the training loss and accuracy
 fig, (ax1, ax2) = plt.subplots(2)
@@ -166,7 +168,6 @@ plt.ylabel("Loss/Accuracy")
 ax1.set_title("Accuracy")
 ax1.plot(H["train_acc"], label="Training")
 ax1.plot(H["val_acc"], label="Validation")
-ax1.legend(loc="lower right")
 ax2.set_title("Loss")
 ax2.plot(H["train_loss"], label="Training")
 ax2.plot(H["val_loss"], label="Validation")
