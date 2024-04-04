@@ -6,24 +6,25 @@ import torch.nn as nn
 import pennylane as qml
 from pennylane import numpy as np
 
+
 class QuanvolutionLayer(nn.Module):
-    def __init__(self, kernel_size=(2,2), stride=2, padding=0, n_qdepth=1):
+    def __init__(self, kernel_size=(2, 2), stride=2, padding=0, n_qdepth=1):
         super(QuanvolutionLayer, self).__init__()
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
         self.n_qdepth = n_qdepth
         self.circuit = self.qnode()
-        
+
     def qnode(self):
-        n_qubits = self.kernel_size[0]*self.kernel_size[1]
-        dev = qml.device("default.qubit", wires=n_qubits)
+        n_qubits = self.kernel_size[0] * self.kernel_size[1]
+        dev = qml.device("lightning.qubit", wires=n_qubits)
         weight_shapes = {"weights": (self.n_qdepth, n_qubits)}
 
         @qml.qnode(dev)
         def circuit(inputs, weights):
             qml.templates.AngleEmbedding(inputs, wires=range(n_qubits))
-            #for j in range(n_qubits):
+            # for j in range(n_qubits):
             #    qml.RY(np.pi *inputs[j], wires=j)
 
             qml.RX(weights[0, 0], wires=0)
@@ -35,15 +36,19 @@ class QuanvolutionLayer(nn.Module):
             qml.RY(weights[0, 3], wires=3)
 
             return [qml.expval(qml.PauliZ(j)) for j in range(n_qubits)]
+
         return qml.qnn.TorchLayer(circuit, weight_shapes)
-    
+
     def forward(self, x):
-        n_qubits = self.kernel_size[0]*self.kernel_size[1]
-        out = np.zeros((
-            x.shape[0], 
-            n_qubits, 
-            int(x.shape[2]/self.kernel_size[0]), 
-            int(x.shape[3]/self.kernel_size[1])))
+        n_qubits = self.kernel_size[0] * self.kernel_size[1]
+        out = np.zeros(
+            (
+                x.shape[0],
+                n_qubits,
+                int(x.shape[2] / self.kernel_size[0]),
+                int(x.shape[3] / self.kernel_size[1]),
+            )
+        )
 
         # Loop over the batch size
         for i in range(x.shape[0]):
@@ -52,12 +57,14 @@ class QuanvolutionLayer(nn.Module):
                 for k in range(0, x.shape[3], self.kernel_size[1]):
                     # Process a region of the image with a quantum circuit
                     q_results = self.circuit(
-                        torch.tensor([
-                            x[i, 0, j, k],
-                            x[i, 0, j, k + 1],
-                            x[i, 0, j + 1, k],
-                            x[i, 0, j + 1, k + 1]
-                        ])
+                        torch.tensor(
+                            [
+                                x[i, 0, j, k],
+                                x[i, 0, j, k + 1],
+                                x[i, 0, j + 1, k],
+                                x[i, 0, j + 1, k + 1],
+                            ]
+                        )
                     )
 
                     # Assign expectation values to different channels of the output pixel (j/2, k/2)
