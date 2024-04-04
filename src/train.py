@@ -160,7 +160,6 @@ with torch.no_grad():  # Turn off autograd for testing evaluation
     preds = []  # Initialize a list to store our predictions
     # Evaluation with test dataset
     for x, y in testDataLoader:
-        ys = y
         # Send the input to the device
         x = x.to(device)
         # Make the predictions and add them to the list
@@ -170,7 +169,7 @@ with torch.no_grad():  # Turn off autograd for testing evaluation
 print("[END] Generating the results...")
 
 # Generate a classification report
-print(classification_report(ys, np.array(preds), target_names=testData.dataset.classes))
+print(classification_report([y for _, y in testData], np.array(preds), target_names=testData.dataset.classes))
 
 # Plot the training loss and accuracy
 fig, (ax1, ax2) = plt.subplots(2)
