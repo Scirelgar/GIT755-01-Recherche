@@ -28,7 +28,7 @@ from models.HQNN_Quanv import HQNN_Quanv
 # Define training hyperparameters
 INIT_LR = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 2
+EPOCHS = 10
 
 print("[INIT] Loading dataset...")
 
