@@ -28,7 +28,7 @@ from models.HQNN_Quanv import HQNN_Quanv
 # Define training hyperparameters
 INIT_LR = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 10
+EPOCHS = 2
 
 print("[INIT] Loading dataset...")
 
@@ -174,15 +174,14 @@ print(classification_report([y for _, y in testData], np.array(preds), target_na
 # Plot the training loss and accuracy
 fig, (ax1, ax2) = plt.subplots(2)
 plt.style.use("ggplot")
-plt.xlabel("Epoch #")
-plt.ylabel("Loss/Accuracy")
-ax1.set_title("Accuracy")
 ax1.plot(H["train_acc"], label="Training")
 ax1.plot(H["val_acc"], label="Validation")
-ax2.set_title("Loss")
+ax1.set_ylabel("Accuracy")
+ax1.legend(loc="upper right")
 ax2.plot(H["train_loss"], label="Training")
 ax2.plot(H["val_loss"], label="Validation")
-ax1.legend(loc="upper right")
+ax2.set_ylabel("Loss")
+ax2.set_xlabel("Epoch #")
 
 print("[END] Saving & logging...")
 
