@@ -10,11 +10,12 @@ from torch import flatten
 
 class ConvolutionLayer(Module):
     """Convolutional Layer
-    
+
     Classical Convolutional Neural Network (CNN) layer. This layer has a 1568 output features
     that will be used as input for the QuantumLayer.
 
     """
+
     def __init__(self, numChannels, classes) -> None:
 
         # call the parent constructor
@@ -37,7 +38,9 @@ class ConvolutionLayer(Module):
         self.maxpool2 = MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
         # initialize first (and only) set of FC => RELU layers
-        self.fc1 = Linear(in_features=1568, out_features=500) #output features to be determined by the QuantumLayer
+        self.fc1 = Linear(
+            in_features=1568, out_features=500
+        )  # TODO : according to the paper, output features is supposed to be 20
 
     def forward(self, x):
         # pass the input through our first set of CONV => RELU => POOL layers
