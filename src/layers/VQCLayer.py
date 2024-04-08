@@ -31,14 +31,14 @@ def qnode2(n_qubits, n_qdepth):
 
 
 class VQCLayer(nn.Module):
-    def __init__(self, input, n_qubits, n_qdepth):
+    def __init__(self, size_in, n_qubits, n_qdepth):
         super(VQCLayer, self).__init__()
-        self.input = input
+        self.size_in = size_in
         self.n_qubits = n_qubits
         self.n_qdepth = n_qdepth
 
         self.layers = []
-        for _ in range(math.ceil(input / n_qubits)):
+        for _ in range(math.ceil(size_in / n_qubits)):
             # Generate a quantum node for
             self.layers.append(qnode1(n_qubits, n_qdepth))
 
