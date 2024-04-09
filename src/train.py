@@ -41,7 +41,7 @@ print("[INIT] Preparing the datasets...")
 # Define the training and validation split
 TRAIN_SPLIT = 0.0025
 VAL_SPLIT = 0.0025
-NUM_TEST_SAMPLES = 500
+NUM_TEST_SAMPLES = 100
 
 # Calculate the train/validation split
 numTrainSamples = int((len(dataset)) * TRAIN_SPLIT)
@@ -75,7 +75,7 @@ device = torch.device("cpu")
 
 # Initialize the model
 # model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
-model = HQNN_Parallel(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
+model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.CrossEntropyLoss()
@@ -185,8 +185,8 @@ print(
 )
 
 # Plot the training loss and accuracy
-fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 6))
 plt.style.use("ggplot")
+fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 6))
 fig.suptitle(f"Training Loss and Accuracy with {model._get_name()}")
 fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15, hspace=0.2)
 ax1.plot(H["train_acc"], label="Training")
