@@ -24,32 +24,39 @@ import pickle
 
 from models.LeNet import LeNet
 from models.HQNN_Quanv import HQNN_Quanv
+from models.HQNN_Parallel import HQNN_Parallel
 
 # Define training hyperparameters
 INIT_LR = 1e-3
-BATCH_SIZE = 64
+BATCH_SIZE = 25
 EPOCHS = 10
 
 print("[INIT] Loading dataset...")
 
 dataset = MNIST(root="../data", train=True, download=True, transform=ToTensor())
+testDataset = MNIST(root="../data", train=False, download=True, transform=ToTensor())
 
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
 TRAIN_SPLIT = 0.0025
-VAL_SPLIT = 0.0015
-TEST_SPLIT = 0.0015
+VAL_SPLIT = 0.0025
+NUM_TEST_SAMPLES = 500
 
 # Calculate the train/validation split
-numTrainSamples = int(len(dataset) * TRAIN_SPLIT)
-numValSamples = int(len(dataset) * VAL_SPLIT)
-numTestSamples = int(len(dataset) * TEST_SPLIT)
-unusedSamples = len(dataset) - (numTrainSamples + numValSamples + numTestSamples)
-(trainData, valData, testData, _) = random_split(
+numTrainSamples = int((len(dataset)) * TRAIN_SPLIT)
+numValSamples = int((len(dataset)) * VAL_SPLIT)
+unusedTrainSamples = len(dataset) - numTrainSamples - numValSamples
+unusedTestSamples = len(testDataset) - NUM_TEST_SAMPLES
+
+# Create Subset objects for train, validation, and test
+trainData, valData, unusedData = random_split(
     dataset,
-    [numTrainSamples, numValSamples, numTestSamples, unusedSamples],
-    generator=torch.Generator().manual_seed(42),
+    [numTrainSamples, numValSamples, unusedTrainSamples],
+)
+testData, unusedData = random_split(
+    testDataset,
+    [NUM_TEST_SAMPLES, unusedTestSamples],
 )
 
 # Initialize the train, validation, and test data loaders
@@ -64,10 +71,11 @@ valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 print("[INIT] Initializing the model...")
 
 # Configure the device we will be using to train the model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
+
 # Initialize the model
 # model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
-model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
+model = HQNN_Parallel(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.CrossEntropyLoss()
@@ -78,6 +86,7 @@ H = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 print("[TRAIN] Training the model...")
 
 startTime = time.time()  # To measure how long training is going to take
+
 
 # loop over our epochs
 for e in range(0, EPOCHS):
@@ -169,11 +178,17 @@ with torch.no_grad():  # Turn off autograd for testing evaluation
 print("[END] Generating the results...")
 
 # Generate a classification report
-print(classification_report([y for _, y in testData], np.array(preds), target_names=testData.dataset.classes))
+print(
+    classification_report(
+        [y for _, y in testData], np.array(preds), target_names=testData.dataset.classes
+    )
+)
 
 # Plot the training loss and accuracy
-fig, (ax1, ax2) = plt.subplots(2)
+fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 6))
 plt.style.use("ggplot")
+fig.suptitle(f"Training Loss and Accuracy with {model._get_name()}")
+fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15, hspace=0.2)
 ax1.plot(H["train_acc"], label="Training")
 ax1.plot(H["val_acc"], label="Validation")
 ax1.set_ylabel("Accuracy")
@@ -182,6 +197,21 @@ ax2.plot(H["train_loss"], label="Training")
 ax2.plot(H["val_loss"], label="Validation")
 ax2.set_ylabel("Loss")
 ax2.set_xlabel("Epoch #")
+
+fig.text(
+    0.01,
+    0.01,
+    "Batch: {}, Epochs: {}, Train num: {}, Val num: {}, Opt: {}, Learning rate: {}, Time: {:.2f}s".format(
+        BATCH_SIZE,
+        EPOCHS,
+        numTrainSamples,
+        numValSamples,
+        opt.__class__.__name__,
+        INIT_LR,
+        endTime - startTime,
+    ),
+    fontsize=10,
+)
 
 print("[END] Saving & logging...")
 

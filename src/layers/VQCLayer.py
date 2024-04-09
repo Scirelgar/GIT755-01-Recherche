@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import pennylane as qml
 import math
+import matplotlib.pyplot as plt
+from pennylane import numpy as np
 
 
 def qnode1(n_qubits, n_qdepth):
@@ -11,8 +13,10 @@ def qnode1(n_qubits, n_qdepth):
     @qml.qnode(dev)
     def circuit(inputs, weights):
         qml.AngleEmbedding(inputs, wires=range(n_qubits), rotation="X")
-        qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
-        return [qml.expval(qml.PauliZ(wires=i)) for i in range(n_qubits)]
+        qml.StronglyEntanglingLayers(
+            weights, wires=range(n_qubits), ranges=np.ones(3, dtype=int)
+        )
+        return [qml.expval(qml.PauliY(wires=i)) for i in range(n_qubits)]
 
     return qml.qnn.TorchLayer(circuit, weight_shapes)
 
@@ -31,14 +35,14 @@ def qnode2(n_qubits, n_qdepth):
 
 
 class VQCLayer(nn.Module):
-    def __init__(self, input, n_qubits, n_qdepth):
+    def __init__(self, size_in, n_qubits, n_qdepth):
         super(VQCLayer, self).__init__()
-        self.input = input
+        self.size_in = size_in
         self.n_qubits = n_qubits
         self.n_qdepth = n_qdepth
 
         self.layers = []
-        for _ in range(math.ceil(input / n_qubits)):
+        for _ in range(math.ceil(size_in / n_qubits)):
             # Generate a quantum node for
             self.layers.append(qnode1(n_qubits, n_qdepth))
 
@@ -51,3 +55,19 @@ class VQCLayer(nn.Module):
 
         # Concatenate the outputs of individual quantum layers
         return torch.cat(outputs, dim=1)
+
+
+if __name__ == "__main__":
+    dev = qml.device("lightning.qubit", wires=5)
+
+    @qml.qnode(dev)
+    @qml.compile()
+    def circuit(inputs, weights):
+        qml.AngleEmbedding(inputs, wires=range(5), rotation="X")
+        qml.StronglyEntanglingLayers(
+            weights, wires=range(5), ranges=np.ones(3, dtype=int)
+        )
+        return [qml.expval(qml.PauliZ(wires=i)) for i in range(5)]
+
+    qml.draw_mpl(circuit)(torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5]), torch.randn(3, 5, 3))
+    plt.show()
