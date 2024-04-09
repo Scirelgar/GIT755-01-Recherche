@@ -39,8 +39,8 @@ testDataset = MNIST(root="../data", train=False, download=True, transform=ToTens
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.005
-VAL_SPLIT = 0.0025
+TRAIN_SPLIT = 0.01
+VAL_SPLIT = 0.01
 NUM_TEST_SAMPLES = 100
 
 # Calculate the train/validation split
