@@ -28,7 +28,7 @@ from models.HQNN_Parallel import HQNN_Parallel
 
 # Define training hyperparameters
 INIT_LR = 1e-3
-BATCH_SIZE = 64
+BATCH_SIZE = 25
 EPOCHS = 10
 
 print("[INIT] Loading dataset...")
@@ -39,9 +39,9 @@ testDataset = MNIST(root="../data", train=False, download=True, transform=ToTens
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.0002
-VAL_SPLIT = 0.0002
-NUM_TEST_SAMPLES = 200
+TRAIN_SPLIT = 0.0025
+VAL_SPLIT = 0.0025
+NUM_TEST_SAMPLES = 500
 
 # Calculate the train/validation split
 numTrainSamples = int((len(dataset)) * TRAIN_SPLIT)
@@ -71,7 +71,7 @@ valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 print("[INIT] Initializing the model...")
 
 # Configure the device we will be using to train the model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 
 # Initialize the model
 # model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
