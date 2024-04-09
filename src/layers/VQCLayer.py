@@ -87,5 +87,8 @@ if __name__ == "__main__":
         )
         return [qml.expval(qml.PauliZ(wires=i)) for i in range(5)]
 
-    qml.draw_mpl(circuit)(torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5]), torch.randn(3, 5, 3))
+    qml.draw_mpl(circuit, style="pennylane")(
+        torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5]),
+        torch.randn(3, 5, 3),
+    )
     plt.show()
