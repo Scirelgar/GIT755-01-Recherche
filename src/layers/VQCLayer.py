@@ -85,12 +85,10 @@ if __name__ == "__main__":
     @qml.compile()
     def circuit(inputs, weights):
         qml.AngleEmbedding(inputs, wires=range(5), rotation="X")
-        qml.StronglyEntanglingLayers(
-            weights, wires=range(5), ranges=np.ones(3, dtype=int)
-        )
+        qml.StronglyEntanglingLayers(weights, wires=range(5))
         return [qml.expval(qml.PauliZ(wires=i)) for i in range(5)]
 
-    qml.draw_mpl(circuit, style="pennylane")(
+    qml.draw_mpl(circuit)(
         torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5]),
         torch.randn(3, 5, 3),
     )
