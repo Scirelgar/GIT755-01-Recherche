@@ -23,15 +23,22 @@ def qnode1(n_qubits, n_qdepth):
 
 def qnode2(n_qubits, n_qdepth):
     weight_shapes = {"weights": (n_qdepth, n_qubits)}
-    dev = qml.device("lightning.qubit", wires=n_qubits)
+    dev = qml.device(
+        "lightning.qubit",
+        wires=n_qubits,
+    )
 
-    @qml.qnode(dev)
     def circuit(inputs, weights):
         qml.AngleEmbedding(inputs, wires=range(n_qubits), rotation="X")
         qml.BasicEntanglerLayers(weights, wires=range(n_qubits))
         return [qml.expval(qml.PauliZ(wires=i)) for i in range(n_qubits)]
 
-    return qml.qnn.TorchLayer(circuit, weight_shapes)
+    qnode_obj = qml.QNode(
+        circuit, dev, interface="torch", diff_method="parameter-shift"
+    )
+
+    return qml.qnn.TorchLayer(qnode_obj, weight_shapes)
+
 
 def qnode3(n_qubits, n_qdepth):
     weight_shapes = {"weights": (0)}
@@ -44,6 +51,7 @@ def qnode3(n_qubits, n_qdepth):
 
     return qml.qnn.TorchLayer(circuit, weight_shapes)
 
+
 class VQCLayer(nn.Module):
     def __init__(self, size_in, n_qubits, n_qdepth):
         super(VQCLayer, self).__init__()
@@ -54,7 +62,7 @@ class VQCLayer(nn.Module):
         self.layers = []
         for _ in range(math.ceil(size_in / n_qubits)):
             # Generate a quantum node for
-            self.layers.append(qnode3(n_qubits, n_qdepth))
+            self.layers.append(qnode2(n_qubits, n_qdepth))
 
     def forward(self, x):
         # Split the input into the number of qubits
