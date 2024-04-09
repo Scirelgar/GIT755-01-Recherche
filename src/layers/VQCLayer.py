@@ -16,7 +16,7 @@ def qnode1(n_qubits, n_qdepth):
         qml.StronglyEntanglingLayers(
             weights, wires=range(n_qubits), ranges=np.ones(3, dtype=int)
         )
-        return [qml.expval(qml.PauliZ(wires=i)) for i in range(n_qubits)]
+        return [qml.expval(qml.PauliY(wires=i)) for i in range(n_qubits)]
 
     return qml.qnn.TorchLayer(circuit, weight_shapes)
 
