@@ -8,9 +8,11 @@ from torch.nn import BatchNorm2d
 from torch import flatten
 from layers.VQCLayer import VQCLayer
 
-n_qfeatures = 20  # number of input features for the quantum layer
-n_qubits = 5  # number of qubits in the quantum circuit
-n_qdepth = 3  # number of entangling layers in the quantum circuit
+NUM_QFEATURES = 20  # number of input features for all the quantum layers
+NUM_QUBITS = 5  # number of qubits for one quantum subcircuit
+NUM_ITER_ENGTANLING_LAYERS = (
+    3  # number of entangling layers in the quantum circuit (depth)
+)
 
 
 class HQNN_Parallel(Module):
@@ -35,16 +37,18 @@ class HQNN_Parallel(Module):
         self.maxpool2 = MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
         # Initialize first (and only) set of FC => RELU layers
-        self.fc1 = Linear(in_features=1568, out_features=n_qfeatures)
+        self.fc1 = Linear(in_features=1568, out_features=NUM_QFEATURES)
         self.relu3 = ReLU()
 
         # Initialize the quantum layer
         self.qlayer1 = VQCLayer(
-            size_in=n_qfeatures, n_qubits=n_qubits, n_qdepth=n_qdepth
+            size_in=NUM_QFEATURES,
+            n_qubits=NUM_QUBITS,
+            n_qdepth=NUM_ITER_ENGTANLING_LAYERS,
         )
 
         # Initialize our softmax classifier
-        self.fc2 = Linear(in_features=n_qfeatures, out_features=classes)
+        self.fc2 = Linear(in_features=NUM_QFEATURES, out_features=classes)
         self.logSoftmax = LogSoftmax(dim=1)
 
     def forward(self, x):
