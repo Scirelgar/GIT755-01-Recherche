@@ -1,0 +1,36 @@
+[INIT] Loading dataset...
+[INIT] Preparing the datasets...
+[INIT] Initializing the model...
+[TRAIN] Training the model...
+[TRAIN] EPOCH: 1/10 | Train loss: 2.167608 | Train acc: 0.3714 | Val loss: 2.227381 | Val acc: 0.3859 | Time elapsed: 2229.59 
+[TRAIN] EPOCH: 2/10 | Train loss: 2.036285 | Train acc: 0.6375 | Val loss: 2.009557 | Val acc: 0.7312 | Time elapsed: 4461.39 
+[TRAIN] EPOCH: 3/10 | Train loss: 1.948494 | Train acc: 0.7990 | Val loss: 1.943232 | Val acc: 0.7036 | Time elapsed: 6705.66 
+[TRAIN] EPOCH: 4/10 | Train loss: 1.860129 | Train acc: 0.8729 | Val loss: 1.837412 | Val acc: 0.8276 | Time elapsed: 8945.86 
+[TRAIN] EPOCH: 5/10 | Train loss: 1.773392 | Train acc: 0.9042 | Val loss: 1.780233 | Val acc: 0.8844 | Time elapsed: 11182.02 
+[TRAIN] EPOCH: 6/10 | Train loss: 1.681971 | Train acc: 0.9328 | Val loss: 1.685333 | Val acc: 0.8922 | Time elapsed: 13423.00 
+[TRAIN] EPOCH: 7/10 | Train loss: 1.593741 | Train acc: 0.9458 | Val loss: 1.608955 | Val acc: 0.8875 | Time elapsed: 15666.59 
+[TRAIN] EPOCH: 8/10 | Train loss: 1.514401 | Train acc: 0.9536 | Val loss: 1.549701 | Val acc: 0.9068 | Time elapsed: 17920.04 
+[TRAIN] EPOCH: 9/10 | Train loss: 1.440410 | Train acc: 0.9604 | Val loss: 1.468409 | Val acc: 0.9109 | Time elapsed: 20160.08 
+[TRAIN] EPOCH: 10/10 | Train loss: 1.361692 | Train acc: 0.9708 | Val loss: 1.409096 | Val acc: 0.9151 | Time elapsed: 22399.29 
+[TRAIN] Finished training the model...
+[TRAIN] Total time taken to train the model: 22399.29s
+[END] Evaluating the model...
+[END] Generating the results...
+              precision    recall  f1-score   support
+
+    0 - zero       1.00      0.98      0.99        65
+     1 - one       0.97      0.99      0.98        73
+     2 - two       0.62      0.87      0.72        45
+   3 - three       0.91      0.95      0.93        66
+    4 - four       0.92      0.98      0.95        58
+    5 - five       0.92      0.96      0.94        49
+     6 - six       1.00      0.91      0.95        53
+   7 - seven       0.96      0.87      0.91        54
+   8 - eight       0.96      0.72      0.82        64
+    9 - nine       0.94      0.93      0.94        73
+
+    accuracy                           0.92       600
+   macro avg       0.92      0.92      0.91       600
+weighted avg       0.93      0.92      0.92       600
+
+[END] Saving & logging...

@@ -28,7 +28,7 @@ from models.HQNN_Parallel import HQNN_Parallel
 
 # Define training hyperparameters
 INIT_LR = 1e-3
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 EPOCHS = 10
 
 print("[INIT] Loading dataset...")
@@ -39,9 +39,9 @@ testDataset = MNIST(root="../data", train=False, download=True, transform=ToTens
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.0025
-VAL_SPLIT = 0.0025
-NUM_TEST_SAMPLES = 100
+TRAIN_SPLIT = 0.032
+VAL_SPLIT = 0.032
+NUM_TEST_SAMPLES = 600
 
 # Calculate the train/validation split
 numTrainSamples = int((len(dataset)) * TRAIN_SPLIT)
