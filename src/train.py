@@ -31,17 +31,17 @@ INIT_LR = 1e-3
 BATCH_SIZE = 64
 EPOCHS = 10
 
+# Define the training and validation split
+TRAIN_SPLIT = 0.0083333334
+VAL_SPLIT = 0.008333334
+NUM_TEST_SAMPLES = 100
+
 print("[INIT] Loading dataset...")
 
 dataset = MNIST(root="../data", train=True, download=True, transform=ToTensor())
 testDataset = MNIST(root="../data", train=False, download=True, transform=ToTensor())
 
 print("[INIT] Preparing the datasets...")
-
-# Define the training and validation split
-TRAIN_SPLIT = 0.0083333334
-VAL_SPLIT = 0.008333334
-NUM_TEST_SAMPLES = 100
 
 # Calculate the train/validation split
 numTrainSamples = int((len(dataset)) * TRAIN_SPLIT)
@@ -72,10 +72,12 @@ print("[INIT] Initializing the model...")
 
 # Configure the device we will be using to train the model
 device = torch.device("cpu")
+# NOTE : seems like cuda's overhead is too big to gain significant speedup
 
 # Initialize the model
 # model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
 model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
+
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.CrossEntropyLoss()
@@ -86,7 +88,6 @@ H = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 print("[TRAIN] Training the model...")
 
 startTime = time.time()  # To measure how long training is going to take
-
 
 # loop over our epochs
 for e in range(0, EPOCHS):
@@ -198,6 +199,7 @@ ax2.plot(H["val_loss"], label="Validation")
 ax2.set_ylabel("Loss")
 ax2.set_xlabel("Epoch #")
 
+# Add hyperparameters to the plot
 fig.text(
     0.01,
     0.01,
@@ -227,5 +229,4 @@ plt.savefig(path + "/plot.png")
 with open(path + "/data.pkl", "wb") as f:
     pickle.dump(H, f)
 
-# TODO NOT WORKING AT THE MOMENT
 # torch.save(model, path + "/model.pth") # Serialize the model to disk

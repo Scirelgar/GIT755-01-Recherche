@@ -7,6 +7,16 @@ from pennylane import numpy as np
 
 
 def qnode1(n_qubits, n_qdepth):
+    """
+    QNode with strongly entangling layers
+
+    Args:
+        n_qubits (int): number of qubits
+        n_qdepth (int): number of layers
+
+    Returns:
+        qml.qnn.TorchLayer: A TorchLayer instance
+    """
     weight_shapes = {"weights": (n_qdepth, n_qubits, 3)}
     dev = qml.device("lightning.qubit", wires=n_qubits)
 
@@ -25,6 +35,16 @@ def qnode1(n_qubits, n_qdepth):
 
 
 def qnode2(n_qubits, n_qdepth):
+    """
+    QNode with only basic entangling layers
+
+    Args:
+        n_qubits (int): number of qubits
+        n_qdepth (int): number of layers
+
+    Returns:
+        qml.qnn.TorchLayer: A TorchLayer instance
+    """
     weight_shapes = {"weights": (n_qdepth, n_qubits)}
     dev = qml.device(
         "lightning.qubit",
@@ -44,6 +64,16 @@ def qnode2(n_qubits, n_qdepth):
 
 
 def qnode3(n_qubits, n_qdepth):
+    """
+    QNode without any entangling layers
+
+    Args:
+        n_qubits (int): number of qubits
+        n_qdepth (int): number of layers
+
+    Returns:
+        qml.qnn.TorchLayer: A TorchLayer instance
+    """
     weight_shapes = {"weights": (0)}
     dev = qml.device("lightning.qubit", wires=n_qubits)
 
@@ -79,6 +109,9 @@ class VQCLayer(nn.Module):
 
 
 if __name__ == "__main__":
+    """
+    Prints the circuit diagram of the VQCLayer when the file is run
+    """
     dev = qml.device("lightning.qubit", wires=5)
 
     @qml.qnode(dev)

@@ -18,6 +18,12 @@ class QuanvolutionLayer(nn.Module):
         self.circuit = self.qnode()
 
     def qnode(self):
+        """
+        QNode with a fixed circuit structure
+
+        Returns:
+            qml.qnn.TorchLayer: A TorchLayer instance
+        """
         n_qubits = self.kernel_size[0] * self.kernel_size[1]
         dev = qml.device("lightning.qubit", wires=n_qubits)
         weight_shapes = {"weights": (self.n_qdepth, n_qubits)}
@@ -41,6 +47,12 @@ class QuanvolutionLayer(nn.Module):
         return qml.qnn.TorchLayer(circuit, weight_shapes)
 
     def qnodeRandomLayers(self):
+        """
+        QNode with random layers
+
+        Returns:
+            qml.qnn.TorchLayer: A TorchLayer instance
+        """
         n_qubits = self.kernel_size[0] * self.kernel_size[1]
         dev = qml.device("lightning.qubit", wires=n_qubits)
         weight_shapes = {"weights": (self.n_qdepth, n_qubits)}
@@ -93,6 +105,9 @@ class QuanvolutionLayer(nn.Module):
 
 
 if __name__ == "__main__":
+    """
+    Prints the circuit diagram of the Quanvolution layer when the file is run
+    """
 
     n_qubits = 4
     n_qdepth = 1
