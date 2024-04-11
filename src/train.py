@@ -39,9 +39,9 @@ testDataset = MNIST(root="../data", train=False, download=True, transform=ToTens
 print("[INIT] Preparing the datasets...")
 
 # Define the training and validation split
-TRAIN_SPLIT = 0.032
-VAL_SPLIT = 0.032
-NUM_TEST_SAMPLES = 600
+TRAIN_SPLIT = 0.083333334
+VAL_SPLIT = 0.008333334
+NUM_TEST_SAMPLES = 100
 
 # Calculate the train/validation split
 numTrainSamples = int((len(dataset)) * TRAIN_SPLIT)
@@ -75,7 +75,7 @@ device = torch.device("cpu")
 
 # Initialize the model
 # model = LeNet(numChannels=1, classes=len(trainData.dataset.classes)).to(device)
-model = HQNN_Parallel(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
+model = HQNN_Quanv(in_channels=1, classes=len(trainData.dataset.classes)).to(device)
 # Initialize the optimizer and loss function
 opt = Adam(model.parameters(), lr=INIT_LR)
 lossFn = nn.CrossEntropyLoss()
