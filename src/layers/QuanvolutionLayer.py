@@ -40,6 +40,23 @@ class QuanvolutionLayer(nn.Module):
 
         return qml.qnn.TorchLayer(circuit, weight_shapes)
 
+    def qnodeRandomLayers(self):
+        n_qubits = self.kernel_size[0] * self.kernel_size[1]
+        dev = qml.device("lightning.qubit", wires=n_qubits)
+        weight_shapes = {"weights": (self.n_qdepth, n_qubits)}
+
+        @qml.qnode(dev)
+        def circuit(inputs, weights):
+            qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
+            # for j in range(n_qubits):
+            #    qml.RY(np.pi *inputs[j], wires=j)
+
+            qml.RandomLayers(weights, wires=range(n_qubits), ratio_imprim=0.75)
+
+            return [qml.expval(qml.PauliZ(j)) for j in range(n_qubits)]
+
+        return qml.qnn.TorchLayer(circuit, weight_shapes)
+
     def forward(self, x):
         n_qubits = self.kernel_size[0] * self.kernel_size[1]
         out = np.zeros(
@@ -89,15 +106,17 @@ if __name__ == "__main__":
         # for j in range(n_qubits):
         #    qml.RY(np.pi *inputs[j], wires=j)
 
-        qml.RX(weights[0, 0], wires=0)
-        qml.RX(weights[0, 1], wires=1)
-        qml.CNOT(wires=[2, 3])
-        qml.CNOT(wires=[0, 2])
-        qml.CNOT(wires=[0, 3])
-        qml.RY(weights[0, 2], wires=0)
-        qml.RY(weights[0, 3], wires=3)
+        # qml.RX(weights[0, 0], wires=0)
+        # qml.RX(weights[0, 1], wires=1)
+        # qml.CNOT(wires=[2, 3])
+        # qml.CNOT(wires=[0, 2])
+        # qml.CNOT(wires=[0, 3])
+        # qml.RY(weights[0, 2], wires=0)
+        # qml.RY(weights[0, 3], wires=3)
+
+        qml.RandomLayers(weights, wires=range(n_qubits), ratio_imprim=0.75)
 
         return [qml.expval(qml.PauliZ(j)) for j in range(n_qubits)]
 
-    qml.draw_mpl(circuit)(torch.tensor([0.1, 0.2, 0.3, 0.4]), torch.randn(1, 4, 1))
+    qml.draw_mpl(circuit)(torch.tensor([0.1, 0.2, 0.3, 0.4]), torch.randn(2, 3))
     plt.show()
