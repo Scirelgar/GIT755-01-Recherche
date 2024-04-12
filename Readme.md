@@ -2,7 +2,7 @@
 
 ## Auteurs
 
-Samuel Richard et Félix Wilhelmy
+[Samuel Richard](https://github.com/Scirelgar) et [Felix Wilhelmy](https://github.com/fwilhelmy)
 
 ## Description
 
