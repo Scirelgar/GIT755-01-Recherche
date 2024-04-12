@@ -223,7 +223,7 @@ dirname = os.path.dirname(__file__)
 path = "results/{date}".format(date=dt)
 os.mkdir(path)
 
-# Saving the results
+# Saving the results to the ./results directory
 plt.savefig(path + "/plot.png")
 
 with open(path + "/data.pkl", "wb") as f:
